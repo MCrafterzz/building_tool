@@ -3,12 +3,10 @@ from bpy.props import (
     BoolProperty,
     IntProperty,
     FloatProperty,
-    EnumProperty,
     PointerProperty,
 )
 
 from ..generic import SizeOffsetProperty
-from ..rails import RailProperty
 
 
 class StairsProperty(bpy.types.PropertyGroup):
@@ -39,7 +37,6 @@ class StairsProperty(bpy.types.PropertyGroup):
     )
 
     size_offset: PointerProperty(type=SizeOffsetProperty)
-    rail: PointerProperty(type=RailProperty)
 
     def set_defaults(self):
         """ Helper function to make convinient property adjustments """

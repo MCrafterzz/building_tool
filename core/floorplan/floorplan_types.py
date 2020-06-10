@@ -80,15 +80,22 @@ def create_hshaped_floorplan(bm, prop):
 
     extrusion_lengths = [prop.tl1, prop.tl2, prop.tl3, prop.tl4]
     extrusion_widths = [prop.tw1, prop.tw2, prop.tw3, prop.tw4]
+    extrusion_offsets = [prop.to1, prop.to2, prop.to3, prop.to4]
     for idx, edge in enumerate(extreme_edges):
-        length, width = extrusion_lengths[idx], extrusion_widths[idx]
+        length, width, offset = extrusion_lengths[idx], extrusion_widths[idx], extrusion_offsets[idx]
 
         if length > 0.0:
             res = bmesh.ops.extrude_edge_only(bm, edges=[edge])
             verts = filter_geom(res["geom"], BMVert)
             v = (calc_edge_median(edge) - median_reference).normalized()
             bmesh.ops.translate(
-                bm, verts=verts, vec=Vector((0, math.copysign(1.0, v.y), 0)) * length
+                bm, verts=verts, vec=Vector((0, math.copysign(1.0, v.y), 0)) * length + Vector((-math.copysign(1.0, v.x), 0, 0)) * offset
+            )
+
+            insideVerts = list(edge.verts)
+            bmesh.ops.translate(
+                bm, verts=insideVerts,
+                vec=Vector((-math.copysign(1.0, v.x), 0, 0)) * offset
             )
 
             filter_function = min if v.x > 0 else max

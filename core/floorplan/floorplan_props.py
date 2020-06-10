@@ -94,6 +94,14 @@ class FloorplanProperty(bpy.types.PropertyGroup):
         description="Length of floorplan segment",
     )
 
+    to1: FloatProperty(
+        name="Tail Offset 1",
+        min=0.0,
+        max=100.0,
+        default=0,
+        description="Offset of floorplan segment",
+    )
+
     tw2: FloatProperty(
         name="Tail Width 2",
         min=0.0,
@@ -109,6 +117,14 @@ class FloorplanProperty(bpy.types.PropertyGroup):
         max=100.0,
         default=1,
         description="Length of floorplan segment",
+    )
+
+    to2: FloatProperty(
+        name="Tail Offset 3",
+        min=0.0,
+        max=100.0,
+        default=0,
+        description="Offset of floorplan segment",
     )
 
     tw3: FloatProperty(
@@ -128,6 +144,14 @@ class FloorplanProperty(bpy.types.PropertyGroup):
         description="Length of floorplan segment",
     )
 
+    to3: FloatProperty(
+        name="Tail Offset 3",
+        min=0.0,
+        max=100.0,
+        default=0,
+        description="Offset of floorplan segment",
+    )
+
     tw4: FloatProperty(
         name="Tail Width 4",
         min=0.0,
@@ -143,6 +167,14 @@ class FloorplanProperty(bpy.types.PropertyGroup):
         max=100.0,
         default=1,
         description="Length of floorplan segment",
+    )
+
+    to4: FloatProperty(
+        name="Tail Offset 4",
+        min=0.0,
+        max=100.0,
+        default=0,
+        description="Offset of floorplan segment",
     )
 
     cap_tris: BoolProperty(
@@ -204,3 +236,9 @@ class FloorplanProperty(bpy.types.PropertyGroup):
             col.prop(self, "tl2")
             col.prop(self, "tl3")
             col.prop(self, "tl4")
+
+            col = row.column(align=True)
+            col.prop(self, "to1")
+            col.prop(self, "to2")
+            col.prop(self, "to3")
+            col.prop(self, "to4")

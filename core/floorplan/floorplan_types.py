@@ -89,13 +89,7 @@ def create_hshaped_floorplan(bm, prop):
             verts = filter_geom(res["geom"], BMVert)
             v = (calc_edge_median(edge) - median_reference).normalized()
             bmesh.ops.translate(
-                bm, verts=verts, vec=Vector((0, math.copysign(1.0, v.y), 0)) * length + Vector((-math.copysign(1.0, v.x), 0, 0)) * offset
-            )
-
-            insideVerts = list(edge.verts)
-            bmesh.ops.translate(
-                bm, verts=insideVerts,
-                vec=Vector((-math.copysign(1.0, v.x), 0, 0)) * offset
+                bm, verts=verts, vec=Vector((0, math.copysign(1.0, v.y), 0)) * length
             )
 
             filter_function = min if v.x > 0 else max
@@ -118,8 +112,12 @@ def create_random_floorplan(bm, prop):
         bm, x_segments=1, y_segments=1, size=1, matrix=scale_x @ scale_y
     )
 
+    amount = prop.extension_amount
+    if prop.random_extension_amount:
+        amount = random.randrange(len(bm.edges) // 3, len(bm.edges))
+
     random_edges = random.sample(
-        list(bm.edges), random.randrange(len(bm.edges) // 3, len(bm.edges))
+        list(bm.edges), amount
     )
     median_reference = list(bm.faces).pop().calc_center_median()
     for edge in random_edges:

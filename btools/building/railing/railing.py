@@ -29,10 +29,11 @@ def create_railing(bm, faces, prop, normal):
     vertical_edges = list({e for f in faces for e in filter_vertical_edges(f.edges)})
     add_facemap_for_groups(FaceMap.RAILING_POSTS)
     cposts = make_corner_posts(bm, vertical_edges, prop, faces[0].normal)
-    top_rails, fills = [], []
+    top_rails, lower_rails, fills = [], [], []
     for f in faces:
-        top_rail, fill = make_fill(bm, f, prop)
+        top_rail, lower_rail, fill = make_fill(bm, f, prop)
         fills.append(fill)
+        lower_rails.append(lower_rails)
         top_rails.append(top_rail)
     bmesh.ops.delete(bm, geom=faces, context="FACES")  # delete reference faces
     return RailingResult(cposts, top_rails, fills)
@@ -65,6 +66,12 @@ def make_fill(bm, face, prop):
     add_facemap_for_groups(FaceMap.RAILING_RAILS)
     top_rail = create_railing_top(bm, top_edge, prop)
 
+    # create railing bottom
+    if prop.has_lower_bar:
+        lower_rail = list(top_rail)
+    else:
+        lower_rail = None
+
     # create fill
     if prop.fill == "POSTS":
         fill = create_fill_posts(bm, dup_face, prop)
@@ -74,7 +81,7 @@ def make_fill(bm, face, prop):
         add_facemap_for_groups(FaceMap.RAILING_WALLS)
         fill = create_fill_walls(bm, dup_face, prop)
 
-    return top_rail, fill
+    return top_rail, lower_rail, fill
 
 
 @map_new_faces(FaceMap.RAILING_RAILS)

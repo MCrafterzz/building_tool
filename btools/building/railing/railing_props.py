@@ -94,6 +94,20 @@ class RailProperty(bpy.types.PropertyGroup):
         description="Type of railing",
     )
 
+    has_lower_bar: BoolProperty(
+        name="Lower Bar",
+        default=False,
+        description="Whether the railing has a lower bar",
+    )
+
+    lower_bar_height: FloatProperty(
+        name="Width",
+        min=0.01,
+        default=0.2,
+        unit="LENGTH",
+        description="Height of lower bar",
+    )
+
     corner_post_width: FloatProperty(
         name="Width",
         min=0.01,
@@ -150,6 +164,14 @@ class RailProperty(bpy.types.PropertyGroup):
             "RAILS" : self.rail_fill,
             "WALL"  : self.wall_fill
         }.get(self.fill).draw(context, layout)
+
+        if self.fill == "POSTS" or self.fill == "WALL":
+            layout.label(text="Lower Bar")
+            row = layout.row(align=True)
+            row.prop(self, "has_lower_bar")
+
+            if self.has_lower_bar:
+                row.prop(self, "lower_bar_height")
 
         layout.label(text="Corner Posts")
         row = layout.row(align=True)

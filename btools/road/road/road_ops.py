@@ -32,7 +32,7 @@ class BTOOLS_OT_finalize_road(bpy.types.Operator):
 
     bl_idname = "btools.finalize_road"
     bl_label = "Finalize Road"
-    bl_options = {"REGISTER", "PRESET"}
+    bl_options = {"REGISTER", "UNDO", "PRESET"}
 
     @classmethod
     def poll(cls, context):

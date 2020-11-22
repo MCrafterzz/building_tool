@@ -1,20 +1,13 @@
 import math
-from math import sin, cos
 
 import bmesh
 import bpy
-from mathutils import Matrix, Vector
+from mathutils import Matrix
 
 from ...utils import (
-    link_obj,
     bm_to_obj,
     crash_safe,
     bm_from_obj,
-    create_mesh,
-    create_object,
-    add_faces_to_map,
-    FaceMap,
-    add_facemap_for_groups,
     filter_geom
 )
 
@@ -30,8 +23,6 @@ class Road:
 
         # Create curve
         curve = cls.create_curve(context)
-
-        # Rotate curve points
 
         # Extrude road
         cls.extrude_road(context, prop, bm)

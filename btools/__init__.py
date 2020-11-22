@@ -30,12 +30,16 @@ class BTOOLS_PT_road_tools(bpy.types.Panel):
         # Draw Operators
         # ``````````````
         col = layout.column(align=True)
-        col.operator("btools.add_road")
+        col.operator("btools.convert_to_road")
         col.operator("btools.finalize_road")
 
         col = layout.column(align=True)
         col.operator("btools.add_array")
         col.operator("btools.finalize_array")
+
+        col = layout.column(align=True)
+        col.operator("btools.convert_to_decal")
+        col.prop(context.scene, "btools_ground_object", text="")
 
 
 class BTOOLS_PT_building_tools(bpy.types.Panel):

@@ -1,14 +1,17 @@
-from .road import register_road as reg_road, unregister_road as unreg_road
+from .road import register_road, unregister_road
 from .array import register_array, unregister_array
+from .decal import register_decal, unregister_decal
 
 register_funcs = (
-    reg_road,
+    register_road,
     register_array,
+    register_decal,
 )
 
 unregister_funcs = (
-    unreg_road,
+    unregister_road,
     unregister_array,
+    unregister_decal,
 )
 
 

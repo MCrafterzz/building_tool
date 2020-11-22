@@ -127,7 +127,7 @@ class BTOOLS_OT_add_array(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.mode == "OBJECT"
+        return context.mode == "OBJECT" and context.selected_objects and context.object.type == "MESH"
 
     def execute(self, context):
         Array.build(context)
@@ -144,7 +144,7 @@ class BTOOLS_OT_finalize_array(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.mode == "OBJECT"
+        return context.mode == "OBJECT" and context.selected_objects and context.object.type == "MESH"
 
     def execute(self, context):
         Array.finalize_curved_array(context)

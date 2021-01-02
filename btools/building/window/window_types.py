@@ -1,11 +1,18 @@
 import bmesh
+from mathutils import Vector
 
-from ..arch import fill_arch, create_arch, add_arch_depth
 from ..fill import fill_face
 from ..frame import add_frame_depth
-from ..generic import clamp_count
+from ..array import (
+    clamp_array_count, 
+    spread_array_face,
+    spread_array_splits,
+)
+
+from ..arch import fill_arch, create_arch, add_arch_depth
 from ...utils import (
     clamp,
+    select,
     FaceMap,
     validate,
     arc_edge,
@@ -39,10 +46,17 @@ def create_window(bm, faces, prop):
         if not valid_ngon(face):
             ngon_to_quad(bm, face)
 
-        clamp_count(calc_face_dimensions(face)[0], prop.frame_thickness * 2, prop)
-        array_faces = subdivide_face_horizontally(bm, face, widths=[prop.size_offset.size.x]*prop.count)
+        clamp_array_count(face, prop)
+
+        median = face.calc_center_median().copy()
+        array_faces = subdivide_face_horizontally(bm, face, widths=[prop.width] * prop.count)
+        max_width = calc_face_dimensions(array_faces[0])[0]
+        spread_array_splits(bm, array_faces, prop, max_width)
+
+        
         for aface in array_faces:
-            face = create_window_split(bm, aface, prop.size_offset.size, prop.size_offset.offset)
+            face = create_window_split(bm, aface, prop)
+            spread_array_face(bm, face, median, prop, max_width)
 
             window, arch = create_window_frame(bm, face, prop)
             if prop.type == "RECTANGULAR":
@@ -54,15 +68,16 @@ def create_window(bm, faces, prop):
 
 
 @map_new_faces(FaceMap.WALLS)
-def create_window_split(bm, face, size, offset):
+def create_window_split(bm, face, prop):
     """Use properties from SplitOffset to subdivide face into regular quads
     """
     wall_w, wall_h = calc_face_dimensions(face)
+    width, height, offset = *prop.size, prop.offset
     # horizontal split
-    h_widths = [wall_w/2 + offset.x - size.x/2, size.x, wall_w/2 - offset.x - size.x/2]
+    h_widths = [wall_w/2 - offset.x - width/2, width, wall_w/2 + offset.x - width/2]
     h_faces = subdivide_face_horizontally(bm, face, h_widths)
     # vertical split
-    v_width = [wall_h/2 + offset.y - size.y/2, size.y, wall_h/2 - offset.y - size.y/2]
+    v_width = [wall_h/2 + offset.y - height/2, height, wall_h/2 - offset.y - height/2]
     v_faces = subdivide_face_vertically(bm, h_faces[1], v_width)
 
     return v_faces[1]
@@ -129,7 +144,7 @@ def create_rectangular_frame(bm, face, prop):
     min_frame_size = min(calc_face_dimensions(face)) / 2
     prop.frame_thickness = clamp(prop.frame_thickness, 0.01, min_frame_size - 0.001)
 
-    window_face, frame_faces = make_window_inset(bm, face, prop.size_offset.size, prop.frame_thickness)
+    window_face, frame_faces = make_window_inset(bm, face, prop)
     arch_face = None
 
     # create arch
@@ -169,11 +184,13 @@ def add_window_depth(bm, window, depth, normal):
         return window, []
 
 
-def make_window_inset(bm, face, size, frame_thickness):
+def make_window_inset(bm, face, prop):
     """ Make two horizontal cuts and two vertical cuts
     """
-    window_width = size.x - frame_thickness * 2
-    window_height = size.y - frame_thickness * 2
+    width, height, frame_thickness = *prop.size, prop.frame_thickness
+
+    window_width = width - frame_thickness * 2
+    window_height = height - frame_thickness * 2
     # horizontal cuts
     h_widths = [frame_thickness, window_width, frame_thickness]
     h_faces = subdivide_face_horizontally(bm, face, h_widths)

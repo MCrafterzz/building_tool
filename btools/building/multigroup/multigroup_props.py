@@ -7,11 +7,22 @@ from bpy.props import (
     PointerProperty,
 )
 
+from ..arch import ArchProperty
+from ..array import ArrayGetSet, ArrayProperty
 from ..fill import FillPanel, FillLouver, FillGlassPanes
-from ..generic import ArchProperty, SizeOffsetProperty, CountProperty
+from ..sizeoffset import SizeOffsetProperty, SizeOffsetGetSet
 
 
-class MultigroupProperty(bpy.types.PropertyGroup):
+class MultigroupProperty(bpy.types.PropertyGroup, ArrayGetSet, SizeOffsetGetSet):
+    arch: PointerProperty(type=ArchProperty)
+    array: PointerProperty(type=ArrayProperty)
+    size_offset: PointerProperty(type=SizeOffsetProperty)
+
+    panel_fill: PointerProperty(type=FillPanel)
+    louver_fill: PointerProperty(type=FillLouver)
+    glass_fill: PointerProperty(type=FillGlassPanes)
+
+
     frame_thickness: FloatProperty(
         name="Frame Thickness",
         min=0.01,
@@ -74,18 +85,6 @@ class MultigroupProperty(bpy.types.PropertyGroup):
         description="Type of fill for door/window",
     )
 
-    count: CountProperty
-    arch: PointerProperty(type=ArchProperty)
-    size_offset: PointerProperty(type=SizeOffsetProperty)
-
-    double_door: BoolProperty(
-        name="Double Door", default=False, description="Double door"
-    )
-
-    panel_fill: PointerProperty(type=FillPanel)
-    glass_fill: PointerProperty(type=FillGlassPanes)
-    louver_fill: PointerProperty(type=FillLouver)
-
     def init(self, wall_dimensions):
         self["wall_dimensions"] = wall_dimensions
         def_h = 1.5 if "d" in str(self.components) else 1.0
@@ -119,12 +118,7 @@ class MultigroupProperty(bpy.types.PropertyGroup):
         row.prop(self, "frame_depth")
         row.prop(self, "frame_thickness")
 
-        col = box.column(align=True)
-        col.prop(self, "count")
-
-        if "d" in str(self.components):
-            col = box.column(align=True)
-            col.prop(self, "double_door")
+        self.array.draw(context, box)
 
         box = layout.box()
         col = box.column(align=True)

@@ -7,7 +7,7 @@ from ..arch import (
 )
 from ..fill import fill_face
 from ..frame import add_frame_depth
-from ..generic import clamp_count
+from ..array import clamp_array_count
 from ...utils import (
     clamp,
     FaceMap,
@@ -35,10 +35,8 @@ def create_door(bm, faces, prop):
         if not valid_ngon(face):
             ngon_to_quad(bm, face)
 
-        clamp_count(calc_face_dimensions(face)[0], prop.frame_thickness * 2, prop)
-        array_faces = subdivide_face_horizontally(
-            bm, face, widths=[prop.size_offset.size.x] * prop.count
-        )
+        clamp_array_count(face, prop)
+        array_faces = subdivide_face_horizontally(bm, face, widths=[prop.width] * prop.count)
         for aface in array_faces:
             face = create_door_split(bm, aface, prop)
             door, arch = create_door_frame(bm, face, prop)
@@ -53,12 +51,12 @@ def create_door_split(bm, face, prop):
     """Use properties from SizeOffset to subdivide face into regular quads
     """
     wall_w, wall_h = calc_face_dimensions(face)
-    size, offset = prop.size_offset.size, prop.size_offset.offset
+    width, height, offset = *prop.size, prop.offset
     # horizontal split
-    h_widths = [wall_w/2 + offset.x - size.x/2, size.x, wall_w/2 - offset.x - size.x/2]
+    h_widths = [wall_w/2 - offset.x - width/2, width, wall_w/2 + offset.x - width/2]
     h_faces = subdivide_face_horizontally(bm, face, h_widths)
     # vertical split
-    v_width = [size.y, wall_h - size.y]
+    v_width = [height, wall_h - height]
     v_faces = subdivide_face_vertically(bm, h_faces[1], v_width)
 
     return v_faces[0]
@@ -73,7 +71,7 @@ def create_door_frame(bm, face, prop):
     min_frame_size = min(calc_face_dimensions(face)) / 2
     prop.frame_thickness = clamp(prop.frame_thickness, 0.01, min_frame_size - 0.001)
 
-    door_face, frame_faces = make_door_inset(bm, face, prop.size_offset.size, prop.frame_thickness)
+    door_face, frame_faces = make_door_inset(bm, face, prop)
     arch_face = None
 
     # create arch
@@ -124,10 +122,12 @@ def create_door_fill(bm, face, prop):
         fill_face(bm, face, prop, "DOOR")
 
 
-def make_door_inset(bm, face, size, frame_thickness):
+def make_door_inset(bm, face, prop):
     """ Make one horizontal cut and two vertical cuts on face
     """
-    door_width = size.x - frame_thickness * 2
+    width, frame_thickness = prop.width, prop.frame_thickness
+
+    door_width = width - frame_thickness * 2
     _, face_height = calc_face_dimensions(face)
     door_height = face_height - frame_thickness
     # horizontal cuts

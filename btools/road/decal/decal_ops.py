@@ -1,7 +1,7 @@
 import bpy
 
-from btools.road.decal import DecalProperty
-from btools.road.decal.decal import Decal
+from .decal_props import DecalProperty
+from .decal import Decal
 
 
 class BTOOLS_OT_convert_to_decal(bpy.types.Operator):

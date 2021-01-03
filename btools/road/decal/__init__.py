@@ -4,7 +4,8 @@ from bpy.props import PointerProperty
 from .decal_ops import BTOOLS_OT_convert_to_decal
 from .decal_props import DecalProperty
 
-classes = (DecalProperty, BTOOLS_OT_convert_to_decal,)
+classes = (DecalProperty, BTOOLS_OT_convert_to_decal)
+
 
 def register_decal():
     bpy.types.Scene.btools_ground_object = PointerProperty(

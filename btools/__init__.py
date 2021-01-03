@@ -7,7 +7,7 @@ bl_info = {
     "name": "Building Tools",
     "author": "Ian Karanja (ranjian0), Lucky Kadam (luckykadam), Marcus (MCrafterzz)",
     "version": (1, 0, 7),
-    "blender": (2, 80, 0),
+    "blender": (2, 80, 3),
     "location": "View3D > Toolshelf > Building Tools",
     "description": "Building Creation Tools",
     "warning": "",
@@ -32,6 +32,9 @@ class BTOOLS_PT_road_tools(bpy.types.Panel):
         col = layout.column(align=True)
         col.operator("btools.convert_to_road")
         col.operator("btools.finalize_road")
+
+        col = layout.column(align=True)
+        col.operator("btools.create_intersection")
 
         col = layout.column(align=True)
         col.operator("btools.add_array")
@@ -145,7 +148,7 @@ class BTOOLS_PT_material_tools(bpy.types.Panel):
             layout.template_ID_preview(face_map_material, "material", hide_buttons=True)
 
 
-classes = (BTOOLS_PT_building_tools, BTOOLS_PT_material_tools)
+classes = (BTOOLS_PT_building_tools, BTOOLS_PT_road_tools, BTOOLS_PT_material_tools)
 
 
 def register():

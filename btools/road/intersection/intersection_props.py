@@ -8,7 +8,7 @@ from bpy.props import (
 class IntersectionProperty(bpy.types.PropertyGroup):
     vertex_distance: FloatProperty(
         name="Vertex Distance",
-        min=0.01,
+        min=0.1,
         max=2,
         default=0.5,
         unit="LENGTH",

@@ -1,7 +1,7 @@
 import sys
 
 import bmesh
-from bmesh.ops import create_vert
+from bmesh.ops import create_vert, contextual_create
 from mathutils import Vector
 from mathutils.geometry import intersect_line_line_2d, interpolate_bezier
 
@@ -42,10 +42,10 @@ class Intersection:
             start_vert = first_vert
             end_vert = last_first_vert
 
-            if (second_vert - center_point).xy.length > (first_vert - center_point).xy.length:
+            if (second_vert - center_point).xy.length < (first_vert - center_point).xy.length:
                 start_vert = second_vert
 
-            if (last_second_vert - center_point).xy.length > (last_first_vert - center_point).xy.length:
+            if (last_second_vert - center_point).xy.length < (last_first_vert - center_point).xy.length:
                 end_vert = last_second_vert
 
             # Save variables for later use
@@ -68,17 +68,17 @@ class Intersection:
             distance = (first_vert - last_first_vert).xy.length * 4
 
             # Use the points that are nearest to the center
-            start_vert = first_vert
+            start_vert = second_vert
             start_tangent = first_vert.xy + direction * distance
-            end_vert = last_first_vert
+            end_vert = last_second_vert
             end_tangent = last_first_vert.xy + last_direction * distance
 
             if (second_vert - center_point).xy.length > (first_vert - center_point).xy.length:
-                start_vert = second_vert
+                start_vert = first_vert
                 start_tangent = second_vert.xy - direction * distance
 
             if (last_second_vert - center_point).xy.length > (last_first_vert - center_point).xy.length:
-                end_vert = last_second_vert
+                end_vert = last_first_vert
                 end_tangent = last_second_vert.xy - last_direction * distance
 
             cls.find_intersection(start_vert, start_tangent, end_vert, end_tangent)
@@ -89,15 +89,14 @@ class Intersection:
                 cls.lerp_point = (first_vert + second_vert + last_first_vert + last_second_vert) / 4
 
             # Loop to generate vertices
-            generated_vertices = list()
-            time_step = props.vertex_distance / accurate_distance
             start_tangent = (start_vert.xy + 2 * cls.lerp_point).xy / 3
             end_tangent = (end_vert.xy + 2 * cls.lerp_point).xy / 3
 
             # Generate xy points by interpolating the generated curve
             positions_xy = interpolate_bezier(start_vert.xy, start_tangent,
                                               end_tangent, end_vert.xy,
-                                              int(accurate_distance / props.vertex_distance))
+                                              max(4, int(accurate_distance / props.vertex_distance)))
+            time_step = 1.0 / (len(positions_xy) - 1)
 
             start_center_point = (start_vert.xy + start_points[int(i / 2 + 1) % len(start_points)]) / 2
             end_center_point = (end_vert.xy + end_points[int(i / 2) % len(end_points)]) / 2
@@ -105,35 +104,43 @@ class Intersection:
             t = 0
             j = 0
             center_added = False
+            last_outer_vert = None
+            last_inner_vert = None
 
             while j < len(positions_xy):
                 real_t = min(1, t)
                 # Get the z position between the start and end z
                 position_z = start_vert.z + (end_vert.z - start_vert.z) * real_t
+
                 # Outer vertex
-                vert = create_vert(bm, co=(positions_xy[j].x, positions_xy[j].y, position_z))
-                generated_vertices.append(vert)
+                outer_vert = create_vert(bm, co=(positions_xy[j].x, positions_xy[j].y, position_z))
 
                 # Inner vertex
                 if real_t < 0.5:
                     position = start_center_point.lerp(center_point, real_t * 2)
                     position_z = start_vert.z + (center_point.z - start_vert.z) * real_t * 2
-                    vert = create_vert(bm, co=(position.x, position.y, position_z))
+                    inner_vert = create_vert(bm, co=(position.x, position.y, position_z))
                 else:
                     if not center_added:
                         # Point has naturally generated in the center
-                        if real_t == 0.5 or real_t - time_step == 0.5:
+                        if real_t * 2 == 0.5 or real_t * 2 - time_step == 0.5:
                             center_added = True
                         else:
                             # Move current point to center
-                            vert = create_vert(bm, co=center_point)
+                            inner_vert = create_vert(bm, co=center_point)
                             center_added = True
                     else:
                         position = center_point.xy.lerp(end_center_point, (real_t - 0.5) * 2)
                         position_z = center_point.z + (end_vert.z - center_point.z) * (real_t - 0.5) * 2
-                        vert = create_vert(bm, co=(position.x, position.y, position_z))
+                        inner_vert = create_vert(bm, co=(position.x, position.y, position_z))
 
-                generated_vertices.append(vert)
+                # Add faces
+                if last_inner_vert is not None and not last_inner_vert == inner_vert and not last_outer_vert == outer_vert:
+                    contextual_create(bm, geom=[last_outer_vert["vert"][0], last_inner_vert["vert"][0],
+                                                outer_vert["vert"][0], inner_vert["vert"][0]])
+
+                last_outer_vert = outer_vert
+                last_inner_vert = inner_vert
 
                 j += 1
                 t += time_step

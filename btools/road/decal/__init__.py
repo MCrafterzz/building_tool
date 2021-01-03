@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import PointerProperty
 
-from .decal import BTOOLS_OT_convert_to_decal
+from .decal_ops import BTOOLS_OT_convert_to_decal
 from .decal_props import DecalProperty
 
 classes = (DecalProperty, BTOOLS_OT_convert_to_decal,)

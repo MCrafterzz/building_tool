@@ -263,15 +263,8 @@ class Intersection:
                 vert = create_vert(bm, co=(xy.x, xy.y, z))
 
                 # Add faces
-                print(len(last_vertices))
                 if last_vertices and i > 1:
                     if last_vert:
-                        print(last_vert)
-                        print(vert)
-                        print(j)
-                        print(len(last_vertices))
-                        print(last_vertices[j])
-                        print(last_vertices[j - 1])
                         contextual_create(bm, geom=[last_vert["vert"][0], vert["vert"][0],
                                                     last_vertices[len(last_vertices) - j]["vert"][0],
                                                     last_vertices[len(last_vertices) - j - 1]["vert"][0]])

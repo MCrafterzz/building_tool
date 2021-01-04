@@ -1,9 +1,9 @@
 import bpy
 
-from .intersection_ops import BTOOLS_OT_create_intersection
+from .intersection_ops import BTOOLS_OT_create_intersection, BTOOLS_OT_connect_sidewalks
 from .intersection_props import IntersectionProperty
 
-classes = (IntersectionProperty, BTOOLS_OT_create_intersection)
+classes = (IntersectionProperty, BTOOLS_OT_create_intersection, BTOOLS_OT_connect_sidewalks)
 
 def register_intersection():
     for cls in classes:

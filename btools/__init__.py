@@ -35,6 +35,7 @@ class BTOOLS_PT_road_tools(bpy.types.Panel):
 
         col = layout.column(align=True)
         col.operator("btools.create_intersection")
+        col.operator("btools.connect_sidewalks")
 
         col = layout.column(align=True)
         col.operator("btools.add_array")

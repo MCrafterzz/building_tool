@@ -23,7 +23,7 @@ class Intersection:
         bm.select_history.validate()
         edges = [elem for elem in bm.select_history if isinstance(elem, BMEdge)]
 
-        if len(edges) == 0:
+        if len(edges) < 4:
             return {"CANCELLED"}
 
         # Generate start points for every connection to allow for calculating center connection points
@@ -195,3 +195,95 @@ class Intersection:
 
         # Store data
         cls.lerp_point = intersection
+
+    @classmethod
+    @crash_safe
+    def connect_sidewalks(cls, context, props):
+        # Get selected edges
+        me = get_edit_mesh()
+        bm = bmesh.from_edit_mesh(me)
+        bm.select_history.validate()
+        edges = [elem for elem in bm.select_history if isinstance(elem, BMEdge)]
+
+        if not len(edges) == 4:
+            return {"CANCELLED"}
+
+        center_point = cls.get_center_point(edges)
+        last_edge = edges[0]
+        last_vertices = list()
+
+        for i in range(1, len(edges), 2):
+            edge = edges[i]
+            first_vert = edge.verts[0].co
+            second_vert = edge.verts[1].co
+            direction = (second_vert - first_vert).xy.normalized()
+            last_first_vert = last_edge.verts[0].co
+            last_second_vert = last_edge.verts[1].co
+            last_direction = (last_second_vert - last_first_vert).xy.normalized()
+            distance = (first_vert - last_first_vert).xy.length * 4
+
+            # Use the points that are nearest to the center
+            start_vert = second_vert
+            start_tangent = first_vert.xy + direction * distance
+            end_vert = last_second_vert
+            end_tangent = last_first_vert.xy + last_direction * distance
+
+            if (second_vert - center_point).xy.length > (first_vert - center_point).xy.length:
+                start_vert = first_vert
+                start_tangent = second_vert.xy - direction * distance
+
+            if (last_second_vert - center_point).xy.length > (last_first_vert - center_point).xy.length:
+                end_vert = last_first_vert
+                end_tangent = last_second_vert.xy - last_direction * distance
+
+            cls.find_intersection(start_vert, start_tangent, end_vert, end_tangent)
+
+            if i == 1:
+                accurate_distance = (start_vert - center_point).length + (end_vert - center_point).length
+
+            if cls.lerp_point is None:
+                # Center point is better than nothing
+                cls.lerp_point = (first_vert + second_vert + last_first_vert + last_second_vert) / 4
+
+            # Loop to generate vertices
+            start_tangent = (start_vert.xy + 2 * cls.lerp_point).xy / 3
+            end_tangent = (end_vert.xy + 2 * cls.lerp_point).xy / 3
+
+            # Generate xy points by interpolating the generated curve
+            positions_xy = interpolate_bezier(start_vert.xy, start_tangent,
+                                              end_tangent, end_vert.xy,
+                                              max(4, int(accurate_distance / props.vertex_distance)))
+
+            last_vert = None
+
+            # Add vertices
+            for j in range(len(positions_xy)):
+                xy = positions_xy[j]
+                z = start_vert.z + (end_vert.z - start_vert.z) * (float(j) / len(positions_xy))
+                vert = create_vert(bm, co=(xy.x, xy.y, z))
+
+                # Add faces
+                print(len(last_vertices))
+                if last_vertices and i > 1:
+                    if last_vert:
+                        print(last_vert)
+                        print(vert)
+                        print(j)
+                        print(len(last_vertices))
+                        print(last_vertices[j])
+                        print(last_vertices[j - 1])
+                        contextual_create(bm, geom=[last_vert["vert"][0], vert["vert"][0],
+                                                    last_vertices[len(last_vertices) - j]["vert"][0],
+                                                    last_vertices[len(last_vertices) - j - 1]["vert"][0]])
+                else:
+                    last_vertices.append(vert)
+
+                last_vert = vert
+
+            # Change variables for next iteration
+            cls.distance = sys.float_info.max
+            cls.lerp_point = None
+            last_edge = edges[(i + 1) % len(edges)]
+
+        bmesh.update_edit_mesh(me, True)
+        return {"FINISHED"}

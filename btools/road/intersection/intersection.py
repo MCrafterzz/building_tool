@@ -259,7 +259,7 @@ class Intersection:
             # Add vertices
             for j in range(len(positions_xy)):
                 xy = positions_xy[j]
-                z = start_vert.z + (end_vert.z - start_vert.z) * (float(j) / len(positions_xy))
+                z = start_vert.z + (end_vert.z - start_vert.z) * (float(j) / (len(positions_xy) - 1))
                 vert = create_vert(bm, co=(xy.x, xy.y, z))
 
                 # Add faces
